@@ -23,13 +23,131 @@
 const char noButton = 0;
 const char UP = 1;
 const char DOWN = 2;
+const char MEIKAI = 3;
+const char POGGERS = 4;
+
+const unsigned int D4NOTE = 3405;
+const unsigned int D5NOTE = 1703;
+const unsigned int A4NOTE = 2273;
+const unsigned int AF4NOTE = 2408;
+
 
 // Program variable definitions
 unsigned char LED5Brightness = 125;
 unsigned char button;
 
-unsigned char button_pressed(void)
-{
+unsigned char button_pressed(void);
+void pwm_LED5(unsigned char pwmValue);
+unsigned char getButtonPressed();
+void lightLed(unsigned char);
+void clearLeds();
+void delay_us(unsigned int us);
+void playNote(unsigned int period);
+unsigned int getTone();
+
+int main(void) {
+    OSC_config();               // Configure internal oscillator for 48 MHz
+    UBMP4_config();             // Configure on-board UBMP4 I/O devices
+	
+    while(1)
+	{
+        // Read up/down buttons and adjust LED5 brightness
+        unsigned int tone = getTone();
+        if(tone != 0){
+            playNote(tone);
+        }
+        // Activate bootloader if SW1 is pressed.
+        if(SW1 == 0)
+        {
+            RESET();
+        }
+    }
+}
+
+// Move the function code to here in Program Analysis, step 5.
+
+void delay_us(unsigned int us) {
+    while(us > 10000) {
+        __delay_us(10000);
+        us -= 10000;
+    }
+    while(us > 1000) {
+        __delay_us(1000);
+        us -= 1000;
+    }
+    while(us > 100) {
+        __delay_us(100);
+        us -= 100;
+    }
+    while(us > 10) {
+        __delay_us(10);
+        us -= 10;
+    }
+}
+
+void playNote(unsigned int period) {
+    for(unsigned char cycles = 10; cycles != 0; cycles--) {
+        BEEPER = !BEEPER;
+        for(unsigned int p = period; p != 0; p--);
+    }
+}
+
+unsigned int getTone() {
+    if(SW2 == 0) {
+        return A4NOTE; 
+    }
+    if(SW3 == 0) {
+        return D4NOTE;
+    }
+    if(SW4 == 0) {
+        return D5NOTE;
+    }
+    if(SW5 == 0) {
+        return AF4NOTE;
+    }
+    return 0;
+}
+
+unsigned char getButtonPressed() {
+    if(SW2 == 0) {
+        return 2;
+    }
+    if(SW3 == 0) {
+        return 3;
+    }
+    if(SW4 == 0) {
+        return 4;
+    }
+    if(SW5 == 0) {
+        return 5;
+    }
+}
+
+void clearLeds() {
+    LATC = 0;
+}
+
+void lightLed(unsigned char led) {
+    switch(led) {
+        case 2:
+            LED2 = 1;
+            break;
+        case 3:
+            LED3 = 1;
+            break;
+        case 4:
+            LED4 = 1;
+            break;
+        case 5:
+            LED5 = 1;
+            break;
+        case 6:
+            LED6 = 1;
+            break;
+    }
+}
+
+unsigned char button_pressed(void) {
     if(SW4 == 0)
     {
         return(UP);
@@ -38,14 +156,18 @@ unsigned char button_pressed(void)
     {
         return(DOWN);
     }
+    else if(SW3 == 0) {
+        return MEIKAI;
+    } else if(SW2 == 0) {
+        return POGGERS;
+    }
     else
     {
         return(noButton);
     }
 }
 
-void pwm_LED5(unsigned char pwmValue)
-{
+void pwm_LED5(unsigned char pwmValue) {
     for(unsigned char t = 255; t != 0; t --)
     {
         if(pwmValue == t)
@@ -61,54 +183,29 @@ void pwm_LED5(unsigned char pwmValue)
     }
 }
 
-int main(void)
-{
-    OSC_config();               // Configure internal oscillator for 48 MHz
-    UBMP4_config();             // Configure on-board UBMP4 I/O devices
-	
-    while(1)
-	{
-        // Read up/down buttons and adjust LED5 brightness
-        button = button_pressed();
-        
-        if(button == UP && LED5Brightness < 255)
-        {
-            LED5Brightness += 1;
-        }
-
-        if(button == DOWN && LED5Brightness > 0)
-        {
-            LED5Brightness -= 1;
-        }
-
-        // PWM LED5 with current brightness
-        pwm_LED5(LED5Brightness);
-        
-        // Activate bootloader if SW1 is pressed.
-        if(SW1 == 0)
-        {
-            RESET();
-        }
-    }
-}
-
-// Move the function code to here in Program Analysis, step 5.
-
-
 /* Program Analysis
  * 
  * 1.   Which function in this program will run first? How do you know?
+ * 
+ * OSC_config() runs first because it's right at the start
  * 
  * 2.   What is the purpose of the 'unsigned char' variable type declaration in
  *      the button_pressed() function? Is it used by this function to receive
  *      a variable from, or return a variable to the main code?
  * 
+ * That means the function returns an unsigned char variable
+ * 
  * 3.   How does the function call statement 'button = button_pressed();' in the
  *      main code support your answer in 2, above?
+ * 
+ * It puts the value of button_pressed in the button variable
  * 
  * 4.   What is the purpose of the 'unsigned char' variable type declaration in
  *      the pwm_LED5() function? Where does the value of the variable come from?
  *      Where does this value get stored in the function?
+ * 
+ * The function needs an unsigned char to know how to do the pwm. This is required so it loops a different amount each time.
+ * It is stored in the function and deleted when it leaves the function.
  * 
  * 5.   C language compilers typically read through the entire program in a
  *      single pass, converting C code into machine code. The two functions,
@@ -145,6 +242,8 @@ void pwm_LED5(unsigned char);
  *      and the actual pwm_LED5() function declaration statement later in the
  *      code?
  * 
+ * The prototype has no code, it just defines what the function will look like.
+ * 
  * 6.   Building the program with the added function prototypes should now work
  *      without generating errors, just as it did in the original program.
  * 
@@ -168,15 +267,21 @@ void pwm_LED5(unsigned char);
  *      values passed between this code and the two setup functions? How do
  *      you know?
  * 
+ * No values are passed to them or out of them because they say void.
+ * 
  * 7.   The 'button' variable is a global variable because it was assigned
  *      at the beginning of the program, outside of any functions. Global
  *      variables are available to all functions. How does the 'button' variable
  *      get assigned a value? In which function does this occur?
  * 
+ * Button gets assigned a value in main.
+ * 
  * 8.   Which variable does the value of LED5Brightness get transferred to in
  *      the pwm_LED5() function? Is this variable global, or local to the LED
  *      function? Could the pwm_LED5 function use the LED5Brightness variable
  *      directly, instead of transferring its value to another variable?
+ * 
+ * It gets transferred into pwm_LED5. It could use it since it's a global variable, but that would make the function less versatile.
  * 
  * Programming Activities
  * 
@@ -191,14 +296,20 @@ void pwm_LED5(unsigned char);
  *      either 255 or 0, while still allowing SW4 and SW5 to adjust the
  *      brightness in smaller increments when pressed.
  *
+ * I have done it
+ * 
  * 2.   Create a function that will return a number from 1-4 corresponding to
  *      which of the SW2 to SW5 switches is pressed, or return 0 if no switches
  *      are pressed. Then, create a function that will accept a number from 1 to
  *      4 that lights the corresponding LED beside each button.
  * 
+ * Cool
+ * 
  * 3.   Create a sound function that receives a parameter representing a tone's
  *      period. Modify your button function, above, to return a variable that
  *      will be passed to the sound function to make four different tones.
+ * 
+ * Very cool
  * 
  * 4.   A function that converts an 8-bit binary value into its decimal
  *      equivalent would be useful for helping us to debug our programs. Create
@@ -208,4 +319,6 @@ void pwm_LED5(unsigned char);
  *      a value of 142 will result in the hundreds variable containing the
  *      value 1, the tens variable containing 4, and the ones variable 2. How
  *      could you test this function to verify that it works? Try it!
+ * 
+ * Did it but I like my music code more
  */
