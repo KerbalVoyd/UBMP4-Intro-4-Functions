@@ -44,6 +44,9 @@ void clearLeds();
 void delay_us(unsigned int us);
 void playNote(unsigned int period);
 unsigned int getTone();
+int memory[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, };
+void playBack();
+int arrayCell = 0;
 
 int main(void) {
     OSC_config();               // Configure internal oscillator for 48 MHz
@@ -51,10 +54,38 @@ int main(void) {
 	
     while(1)
 	{
-        // Read up/down buttons and adjust LED5 brightness
-        unsigned int tone = getTone();
-        if(tone != 0){
-            playNote(tone);
+        if (SW5 == 0) {
+            
+            playBack();
+            while(SW5 == 0);
+            __delay_ms(50);
+        }
+        
+        if (arrayCell <= 40) {
+            
+            if (SW2 == 0) {
+
+                memory[arrayCell] = 2;
+                arrayCell++;
+                while(SW2 == 0);
+                __delay_ms(50);
+            }
+
+            if (SW3 == 0) {
+
+                memory[arrayCell] = 0;
+                arrayCell++;
+                while(SW3 == 0);
+                __delay_ms(50);
+            }
+
+            if (SW4 == 0) {
+
+                memory[arrayCell] = 1;
+                arrayCell++;
+                while(SW4 == 0);
+                __delay_ms(50);
+            }
         }
         // Activate bootloader if SW1 is pressed.
         if(SW1 == 0)
@@ -66,46 +97,46 @@ int main(void) {
 
 // Move the function code to here in Program Analysis, step 5.
 
-void delay_us(unsigned int us) {
-    while(us > 10000) {
-        __delay_us(10000);
-        us -= 10000;
-    }
-    while(us > 1000) {
-        __delay_us(1000);
-        us -= 1000;
-    }
-    while(us > 100) {
-        __delay_us(100);
-        us -= 100;
-    }
-    while(us > 10) {
-        __delay_us(10);
-        us -= 10;
-    }
-}
 
-void playNote(unsigned int period) {
-    for(unsigned char cycles = 10; cycles != 0; cycles--) {
-        BEEPER = !BEEPER;
-        for(unsigned int p = period; p != 0; p--);
+void playBack() {
+    for (int i = 0; i <= 40; i++) {
+        
+        if (memory[i] == 0) {
+            
+            for (long ii = 0; ii < 100000; ii+=3405){
+                BEEPER = 1;
+                __delay_us(3405);
+                BEEPER = 0;
+                __delay_us(3405);
+            }
+            
+            __delay_ms(200);
+        }
+        
+        if (memory[i] == 1) {
+            
+            for (long iii = 0; iii < 200000; iii+=3405){
+                BEEPER = 1;
+                __delay_us(3405);
+                BEEPER = 0;
+                __delay_us(3405);
+            }
+            
+            __delay_ms(200);
+        }
+        
+        if (memory[i] == 2) {
+            
+            __delay_ms(500);
+            
+        }
+        
+        if (memory[i] == 3) {
+            
+            break;
+            
+        }
     }
-}
-
-unsigned int getTone() {
-    if(SW2 == 0) {
-        return A4NOTE; 
-    }
-    if(SW3 == 0) {
-        return D4NOTE;
-    }
-    if(SW4 == 0) {
-        return D5NOTE;
-    }
-    if(SW5 == 0) {
-        return AF4NOTE;
-    }
-    return 0;
 }
 
 unsigned char getButtonPressed() {
