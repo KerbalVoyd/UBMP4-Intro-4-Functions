@@ -44,25 +44,126 @@ void clearLeds();
 void delay_us(unsigned int us);
 void playNote(unsigned int period);
 unsigned int getTone();
-int memory[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, };
+int memory[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
+int musicMemory[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,};
 void playBack();
-int arrayCell = 0;
+void delay_ms(unsigned char);
+void beepSelect();
+void morseCode();
 
+int pressedCounter = 250;
+int arrayCell = 0;
+int mode = 0;
+int randonumbo = 500;
 int main(void) {
     OSC_config();               // Configure internal oscillator for 48 MHz
     UBMP4_config();             // Configure on-board UBMP4 I/O devices
 	
     while(1)
 	{
-        if (SW5 == 0) {
+        pressedCounter = 250;
+        LATC = 0b10000000;
             
-            playBack();
+            if (SW2 == 0 && mode <= 4) {
+                
+                mode++;
+                beepSelect();
+                while (SW2 == 0);
+                __delay_ms(50);
+            } else if (mode == 4) {
+                mode = 0;
+            }
+            
+            if (mode == 0) {
+                
+                LATC = 0b10000000;
+                
+                
+            } else if (mode == 1) {
+                
+                LATC = 0b10010000;
+                
+                
+            } else if (mode == 2) {
+                
+                LATC = 0b11010000;
+                
+                
+            } else if (mode == 3) {
+                
+                LATC = 0b11110000;
+                if (SW5 == 0) {
+                    morseCode();
+                }
+                
+            }
+            
+       /* if (SW5 == 0) {
+            
+            for (long i = 0; i < 50000; i+=250){
+                BEEPER = !BEEPER;
+                __delay_us(500);
+            }
+            
+            for (long i = 0; i < 50000; i+=200){
+                BEEPER = !BEEPER;
+                __delay_us(400);
+            }
             while(SW5 == 0);
             __delay_ms(50);
-        }
-        
-        if (arrayCell <= 40) {
             
+           // while(SW5 == 0);
+           // __delay_ms(50);
+        }*/
+        
+        
+        
+        
+        // Activate bootloader if SW1 is pressed.
+        if(SW1 == 0)
+        {
+            RESET();
+        }
+    }
+}
+
+// Move the function code to here in Program Analysis, step 5.
+
+void beepSelect() {
+    
+    for (long i = 0; i < 50000; i+=250){
+        BEEPER = !BEEPER;
+        __delay_us(500);
+        }
+            
+    for (long i = 0; i < 50000; i+=200){
+        BEEPER = !BEEPER;
+        __delay_us(400);
+    }
+    
+}
+
+/*void musicWriter() {
+    
+    
+    
+}*/
+
+void delay_ms(unsigned char milliseconds)
+{
+   while(milliseconds > 0)
+   {
+      milliseconds--;
+       __delay_us(990);
+   }
+}
+
+void morseCode() {
+    
+    while(true) {
+
+        if (arrayCell <= 40) {
+
             if (SW2 == 0) {
 
                 memory[arrayCell] = 2;
@@ -87,17 +188,35 @@ int main(void) {
                 __delay_ms(50);
             }
         }
-        // Activate bootloader if SW1 is pressed.
-        if(SW1 == 0)
-        {
-            RESET();
+
+        if (SW5 == 0) {
+
+            playBack();
+            while(SW5 == 0);
+            __delay_ms(50);
         }
+        
+        if (SW4 == 0 && SW3 == 0) {
+            
+            
+            
+        }
+        /*while (SW4 == 0 && SW3 == 0) {
+            
+            pressedCounter--;
+            delay_ms(1);
+            if (pressedCounter == 0) {
+                break;
+            }
+            
+        }*/
     }
+    
 }
 
-// Move the function code to here in Program Analysis, step 5.
 
-
+    
+        
 void playBack() {
     for (int i = 0; i <= 40; i++) {
         
