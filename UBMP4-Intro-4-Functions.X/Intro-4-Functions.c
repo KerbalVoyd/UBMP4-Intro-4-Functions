@@ -161,7 +161,20 @@ void delay_ms(unsigned char milliseconds)
 void morseCode() {
     
     while(true) {
-
+        
+        if (SW4 == 0) {
+            __delay_ms(100);
+            if (SW3 == 0) {
+                
+                pressedCounter--;
+                __delay_ms(1);
+                
+                if (pressedCounter == 0) {
+                    return;
+                }
+            }
+        }
+        
         if (arrayCell <= 40) {
 
             if (SW2 == 0) {
@@ -196,20 +209,7 @@ void morseCode() {
             __delay_ms(50);
         }
         
-        if (SW4 == 0 && SW3 == 0) {
-            
-            
-            
-        }
-        /*while (SW4 == 0 && SW3 == 0) {
-            
-            pressedCounter--;
-            delay_ms(1);
-            if (pressedCounter == 0) {
-                break;
-            }
-            
-        }*/
+        
     }
     
 }
