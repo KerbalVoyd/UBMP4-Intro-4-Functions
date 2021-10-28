@@ -13,7 +13,8 @@
 #include    "xc.h"              // Microchip XC8 compiler include file
 #include    "stdint.h"          // Include integer definitions
 #include    "stdbool.h"         // Include Boolean (true/false) definitions
-
+#include <stdio.h>
+#include <string.h>
 #include    "UBMP4.h"           // Include UBMP4 constants and functions
 
 // TODO Set linker ROM ranges to 'default,-0-7FF' under "Memory model" pull-down.
@@ -44,7 +45,7 @@ void clearLeds();
 void delay_us(unsigned int us);
 void playNote(unsigned int period);
 unsigned int getTone();
-int memory[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
+int memory[50];
 int musicMemory[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,};
 void playBack();
 void delay_ms(unsigned char);
@@ -59,11 +60,14 @@ int main(void) {
     OSC_config();               // Configure internal oscillator for 48 MHz
     UBMP4_config();             // Configure on-board UBMP4 I/O devices
 	
+    memset(memory, 3, 50);
+    
     while(1)
 	{
         pressedCounter = 250;
         LATC = 0b10000000;
             
+        
             if (SW2 == 0 && mode <= 4) {
                 
                 mode++;
@@ -154,28 +158,16 @@ void delay_ms(unsigned char milliseconds)
    while(milliseconds > 0)
    {
       milliseconds--;
-       __delay_us(990);
+       __delay_us(1000);
    }
 }
 
 void morseCode() {
-    
+    __delay_ms(300);
     while(true) {
+        pressedCounter = 250;
         
-        if (SW4 == 0) {
-            __delay_ms(100);
-            if (SW3 == 0) {
-                
-                pressedCounter--;
-                __delay_ms(1);
-                
-                if (pressedCounter == 0) {
-                    return;
-                }
-            }
-        }
-        
-        if (arrayCell <= 40) {
+        if (arrayCell <= 50) {
 
             if (SW2 == 0) {
 
@@ -194,11 +186,26 @@ void morseCode() {
             }
 
             if (SW4 == 0) {
+                while (SW4 == 0) {
 
-                memory[arrayCell] = 1;
-                arrayCell++;
-                while(SW4 == 0);
-                __delay_ms(50);
+                    if (SW3 == 0) {
+
+                        pressedCounter--;
+                        __delay_ms(1);
+
+                        if (pressedCounter == 0) {
+                            return;
+                        }
+                    } else if (SW4 == 1){
+                        memory[arrayCell] = 1;
+                        arrayCell++;
+                        while(SW4 == 0);
+                        __delay_ms(50);
+                        break;
+                    }
+                }
+                
+                
             }
         }
 
