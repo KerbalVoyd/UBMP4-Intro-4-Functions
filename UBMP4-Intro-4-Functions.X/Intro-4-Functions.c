@@ -60,7 +60,11 @@ int main(void) {
     OSC_config();               // Configure internal oscillator for 48 MHz
     UBMP4_config();             // Configure on-board UBMP4 I/O devices
 	
-    memset(memory, 3, 50);
+    for (int i = 0; i <= 50; i++) {
+        
+        memory[i] = 3;
+        
+    }
     
     while(1)
 	{
@@ -133,16 +137,31 @@ int main(void) {
 
 // Move the function code to here in Program Analysis, step 5.
 
-void beepSelect() {
+void beepSelect(int picker456) {
     
-    for (long i = 0; i < 50000; i+=250){
-        BEEPER = !BEEPER;
-        __delay_us(500);
+    if (picker456 == 0) {
+        for (long i = 0; i < 50000; i+=250){
+            BEEPER = !BEEPER;
+            __delay_us(500);
+            }
+
+        for (long i = 0; i < 50000; i+=200){
+            BEEPER = !BEEPER;
+            __delay_us(400);
         }
-            
-    for (long i = 0; i < 50000; i+=200){
-        BEEPER = !BEEPER;
-        __delay_us(400);
+    }
+    
+    if (picker456 == 1) {
+        for (long i = 0; i < 50000; i+=250){
+            BEEPER = !BEEPER;
+            __delay_us(500);
+            }
+
+        for (long i = 0; i < 50000; i+=200){
+            BEEPER = !BEEPER;
+            __delay_us(400);
+        }
+        
     }
     
 }
@@ -194,6 +213,7 @@ void morseCode() {
                         __delay_ms(1);
 
                         if (pressedCounter == 0) {
+                            beepSelect(1);
                             return;
                         }
                     } else if (SW4 == 1){
@@ -204,21 +224,36 @@ void morseCode() {
                         break;
                     }
                 }
-                
-                
             }
         }
 
         if (SW5 == 0) {
+            while (SW5 ==0) {
+                
+                if (SW2 == 0) {
+                    
+                    pressedCounter--;
+                    __delay_ms(1);
 
-            playBack();
-            while(SW5 == 0);
-            __delay_ms(50);
+                    if (pressedCounter == 0) {
+                        
+                        for (int i = 0; i <= 50; i++) {
+
+                            memory[i] = 3;
+
+                        }
+                        break;
+                    }
+                } else if (SW5 == 1) {
+                    
+                    playBack();
+                    while(SW5 == 0);
+                    __delay_ms(50);
+                    break;
+                }
+            }
         }
-        
-        
     }
-    
 }
 
 
